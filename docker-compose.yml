@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: draw-project-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: draw_project
+      MYSQL_USER: draw_user
+      MYSQL_PASSWORD: draw_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - draw-network
+    command: --default-authentication-plugin=mysql_native_password
+
+  app:
+    build: .
+    container_name: draw-project-app
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/draw_project?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: draw_user
+      SPRING_DATASOURCE_PASSWORD: draw_password
+    depends_on:
+      - mysql
+    networks:
+      - draw-network
+
+volumes:
+  mysql_data:
+
+networks:
+  draw-network:
+    driver: bridge
