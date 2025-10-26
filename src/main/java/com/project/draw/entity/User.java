@@ -1,9 +1,10 @@
 package com.project.draw.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.FieldDefaults;
+
+import java.util.List;
 
 @Builder
 @AllArgsConstructor
@@ -12,11 +13,20 @@ import lombok.*;
 @Setter
 @Entity
 @Table(name = "users")
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class User extends BaseEntity {
-    private String email;
+    String email;
     @Column(unique = true ,nullable = false)
-    private String username;
+    String username;
     @Column(nullable = false)
-    private String password;
-    private String avatar;
+    String password;
+    String avatar;
+    @OneToMany(mappedBy = "createdBy")
+    List<Room> rooms;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    List<UserSession> userSessions;
+
+    @OneToMany(mappedBy = "user")
+    List<DrawAction> drawActions;
 }

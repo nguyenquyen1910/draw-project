@@ -1,12 +1,9 @@
 package com.project.draw.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Builder
 @AllArgsConstructor
@@ -16,14 +13,23 @@ import java.util.UUID;
 @Entity
 @Table(name = "user_sessions")
 public class UserSession extends BaseEntity{
-    @Column(nullable = false)
-    private UUID userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "room_id", nullable = false)
+    Room room;
 
-    @Column(nullable = false)
-    private UUID roomId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    User user;
 
-    @Column(nullable = false)
-    private Boolean isConnected;
     private LocalDateTime joinedAt;
     private LocalDateTime leftAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    SessionStatus status;
+
+    public enum SessionStatus {
+        ONLINE,
+        OFFLINE
+    }
 }

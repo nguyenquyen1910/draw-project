@@ -1,11 +1,8 @@
 package com.project.draw.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
-
-import java.util.UUID;
+import lombok.experimental.FieldDefaults;
 
 @Builder
 @NoArgsConstructor
@@ -14,22 +11,26 @@ import java.util.UUID;
 @Setter
 @Entity
 @Table(name = "draw_actions")
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class DrawAction extends BaseEntity {
-    @Column(nullable = false)
-    private UUID roomId;
-    @Column(nullable = false)
-    private UUID userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "room_id", nullable = false)
+    Room room;
 
-    private String actionType;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    User user;
 
-    private Double startX;
-    private Double startY;
-    private Double endX;
-    private Double endY;
-    private Double lineWidth;
+    String actionType;
 
-    private String color;
+    Double startX;
+    Double startY;
+    Double endX;
+    Double endY;
+    Double lineWidth;
+
+    String color;
     @Column(nullable = false)
-    private Long sequenceNumber;
+    Long sequenceNumber;
 
 }
