@@ -12,7 +12,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class CreateRoomResponse {
+public class RoomResponse {
     UUID id;
     String roomCode;
     String roomName;

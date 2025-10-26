@@ -1,7 +1,7 @@
 package com.project.draw.service;
 
 import com.project.draw.dto.request.CreateRoomRequest;
-import com.project.draw.dto.response.CreateRoomResponse;
+import com.project.draw.dto.response.RoomResponse;
 import com.project.draw.entity.Room;
 import com.project.draw.entity.User;
 import com.project.draw.entity.UserSession;
@@ -9,14 +9,22 @@ import com.project.draw.exception.ApplicationException;
 import com.project.draw.exception.ErrorCode;
 import com.project.draw.repository.RoomRepository;
 import com.project.draw.repository.UserRepository;
-import com.project.draw.repository.UserSessionRepositoty;
+import com.project.draw.repository.UserSessionRepository;
 import com.project.draw.service.impl.RoomService;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -24,10 +32,10 @@ import java.util.UUID;
 public class RoomServiceImpl implements RoomService {
     RoomRepository roomRepository;
     UserRepository userRepository;
-    UserSessionRepositoty userSessionRepositoty;
+    UserSessionRepository userSessionRepository;
     String baseUrl = "http://localhost:8080";
 
-    public CreateRoomResponse createRoom(CreateRoomRequest request, UUID userId) {
+    public RoomResponse createRoom(CreateRoomRequest request, UUID userId) {
         User createdBy = userRepository.findById(userId)
                 .orElseThrow(() -> new ApplicationException(ErrorCode.USER_NOT_FOUND));
 
@@ -52,9 +60,9 @@ public class RoomServiceImpl implements RoomService {
                 .status(UserSession.SessionStatus.ONLINE)
                 .build();
 
-        userSessionRepositoty.save(userSession);
+        userSessionRepository.save(userSession);
 
-        return CreateRoomResponse.builder()
+        return RoomResponse.builder()
                 .id(savedRoom.getId())
                 .roomCode(savedRoom.getRoomCode())
                 .roomName(savedRoom.getRoomName())
@@ -66,6 +74,28 @@ public class RoomServiceImpl implements RoomService {
                 .build();
     }
 
+    public Page<RoomResponse> getAllRooms(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Room> roomPage = roomRepository.findAll(pageable);
+        Map<UUID, Integer> onlineCountMap = getOnlineCountMap(roomPage.getContent());
+        return roomPage.map(room -> {
+            String joinUrl = String.format("%s/join/%s", baseUrl, room.getRoomCode());
+            int onlineUsers = onlineCountMap.getOrDefault(room.getId(), 0);
+            return RoomResponse.builder()
+                    .id(room.getId())
+                    .roomCode(room.getRoomCode())
+                    .roomName(room.getRoomName())
+                    .desc(room.getDescription())
+                    .createdByUsername(room.getCreatedBy().getUsername())
+                    .maxUsers(room.getMaxUsers())
+                    .onlineUsers(onlineUsers)
+                    .joinUrl(joinUrl)
+                    .build();
+        });
+    }
+
+
+
     private String generateUniqueRoomCode() {
         while (true) {
             String roomCode = UUID.randomUUID().toString().substring(0, 8);
@@ -74,5 +104,25 @@ public class RoomServiceImpl implements RoomService {
                 return roomCode;
             }
         }
+    }
+
+    private Map<UUID, Integer> getOnlineCountMap(List<Room> rooms) {
+        if (rooms.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        
+        List<UUID> roomIds = rooms.stream()
+                .map(Room::getId)
+                .toList();
+        
+        List<Object[]> counts = userSessionRepository
+                .countOnlineUsersByRoomIds(roomIds);
+        
+        return counts.stream()
+                .collect(Collectors.toMap(
+                    arr -> (UUID) arr[0],      
+                    arr -> ((Long) arr[1]).intValue(), 
+                    (a, b) -> a
+                ));
     }
 }
