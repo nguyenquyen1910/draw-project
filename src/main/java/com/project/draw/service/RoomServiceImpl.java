@@ -13,7 +13,9 @@ import com.project.draw.repository.UserSessionRepository;
 import com.project.draw.service.impl.RoomService;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
@@ -33,7 +35,9 @@ public class RoomServiceImpl implements RoomService {
     RoomRepository roomRepository;
     UserRepository userRepository;
     UserSessionRepository userSessionRepository;
-    String baseUrl = "http://localhost:8080";
+    @NonFinal
+    @Value("${app.base-url}")   
+    String baseUrl;
 
     public RoomResponse createRoom(CreateRoomRequest request, UUID userId) {
         User createdBy = userRepository.findById(userId)
@@ -93,6 +97,34 @@ public class RoomServiceImpl implements RoomService {
                     .build();
         });
     }
+
+    public RoomResponse getRoomById(UUID roomId) {
+        Room room = roomRepository.findById(roomId)
+            .orElseThrow(() -> new ApplicationException(ErrorCode.ROOM_NOT_FOUND));
+        int onlineUsers = userSessionRepository
+            .countByRoomAndStatus(room, UserSession.SessionStatus.ONLINE);
+        String joinUrl = String.format("%s/join/%s", baseUrl, room.getRoomCode());
+        return RoomResponse.builder()
+            .id(room.getId())
+            .roomCode(room.getRoomCode())
+            .roomName(room.getRoomName())
+            .desc(room.getDescription())
+            .createdByUsername(room.getCreatedBy().getUsername())
+            .maxUsers(room.getMaxUsers())
+            .onlineUsers(onlineUsers)
+            .joinUrl(joinUrl)
+            .build();
+    }
+
+
+    public Boolean deleteRoomById(UUID roomId) {
+        if(!roomRepository.existsById(roomId)) {
+            throw new ApplicationException(ErrorCode.ROOM_NOT_FOUND);
+        }
+        roomRepository.deleteById(roomId);
+        return true;
+    }
+
 
 
 

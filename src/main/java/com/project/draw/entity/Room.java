@@ -34,4 +34,6 @@ public class Room extends BaseEntity {
 
     @OneToMany(mappedBy = "room")
     List<DrawAction> drawActions;
+
+    String gridType = "DOT";
 }

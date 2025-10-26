@@ -12,7 +12,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -52,6 +54,30 @@ public class RoomController {
                 .code(1000)
                 .message("Get all rooms successful")
                 .result(rooms)
+                .build());
+    }
+
+    @GetMapping("/{roomId}")
+    public ResponseEntity<ApiResponse<RoomResponse>> getRoomById(
+        @PathVariable UUID roomId
+    ) {
+        RoomResponse room = roomService.getRoomById(roomId);
+        return ResponseEntity.ok(ApiResponse.<RoomResponse>builder()
+                .code(1000)
+                .message("Get room by id successful")
+                .result(room)
+                .build());
+    }
+
+    @DeleteMapping("/{roomId}")
+    public ResponseEntity<ApiResponse<Boolean>> deleteRoomById(
+        @RequestParam UUID roomId
+    ) {
+        Boolean deleted = roomService.deleteRoomById(roomId);
+        return ResponseEntity.ok(ApiResponse.<Boolean>builder()
+                .code(1000)
+                .message("Delete room successful")
+                .result(deleted)
                 .build());
     }
     

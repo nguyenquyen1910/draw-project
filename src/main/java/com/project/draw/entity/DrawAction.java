@@ -33,4 +33,7 @@ public class DrawAction extends BaseEntity {
     @Column(nullable = false)
     Long sequenceNumber;
 
+    @Column(columnDefinition = "TEXT")
+    String textContent;
+    
 }

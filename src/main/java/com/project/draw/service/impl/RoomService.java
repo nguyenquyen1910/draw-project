@@ -10,4 +10,6 @@ import org.springframework.data.domain.Page;
 public interface RoomService {
     RoomResponse createRoom(CreateRoomRequest request, UUID userId);
     Page<RoomResponse> getAllRooms(int page, int size);
+    Boolean deleteRoomById(UUID roomId);
+    RoomResponse getRoomById(UUID roomId);
 }
