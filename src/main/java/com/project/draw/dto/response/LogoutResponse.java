@@ -1,4 +1,4 @@
-package com.project.draw.dto.request;
+package com.project.draw.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,7 +9,6 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class LoginRequest {
-    private String username;
-    private String password;
+public class LogoutResponse {
+    private String message;
 }
